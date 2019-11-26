@@ -7,11 +7,11 @@ classdef spectrometer < handle
     % based on OceanOptics code (see ... for details)
     
     properties
-        exposure_time
-        average
+        exposure_time = 1000;
+        average = 1;
     end
     
-    properties (access=private)
+    properties (Access = private)
         spectrometerObj
         % Spectrometer index to use (first spectrometer by default).
         spectrometerIndex = 0;

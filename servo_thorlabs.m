@@ -1,6 +1,8 @@
 classdef servo_thorlabs < handle
-    % manage the shutters trough an arduino board and servos for RCs
-    % the arduino code is written at the end of this code
+    % manage servos from thorlabs
+    % use the APT GUI https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=Motion_Control&viewtab=0
+    % https://www.thorlabs.com/Software/Motion%20Control/APT_Communications_Protocol.pdf
+    
 
     properties (Access = private)
         position
@@ -21,7 +23,8 @@ classdef servo_thorlabs < handle
             self.servox.StartCtrl;
             % Set the Serial Number
             %serial_n = 83843398;
-            set(self.servox,'HWSerialNum', serial_n);
+            serial_n = 83847443; % serial from the monocromator servo controller
+            set(self.servox, 'HWSerialNum', serial_n);
             % Indentify the device
             self.servox.Identify;
             pause(0.5); 

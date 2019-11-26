@@ -11,14 +11,26 @@ classdef spectrometer < handle
         average
     end
     
+    properties (access=private)
+        spectrometerObj
+        % Spectrometer index to use (first spectrometer by default).
+        spectrometerIndex = 0;
+        % Channel index to use (first channel by default).
+        channelIndex = 0;
+    end
+    
     methods
         % constructor
         function self = spectrometer()
+            spectrometerObj = icdevice('OceanOptics_OmniDriver.mdd');
+            connect(spectrometerObj);
+            disp(spectrometerObj);
         end
         
         % set exposure and average
         function set_exposure(self, exposure_time, average)
             self.exposure_time = exposure_time;
+            invoke(self.spectrometerObj, 'setIntegrationTime', self.spectrometerIndex, self.channelIndex, exposure_time);
             self.average = average;
         end
         

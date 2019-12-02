@@ -36,7 +36,7 @@ classdef spectrometer < handle
         
         % acquire spectra
         function spectra = get_spectra(self)
-            return 0;
+            spectra = 0;
         end
         
         % destructor: delete the handle

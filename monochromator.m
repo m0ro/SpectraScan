@@ -9,6 +9,8 @@ classdef monochromator < handle
         min_servo_position %I scan for a given interval to find the correct lambda I ask for
         max_servo_position
         spectral_lut %lookuptable
+        spectral_lut
+        output_intensity
     end
     
     methods
@@ -22,6 +24,12 @@ classdef monochromator < handle
         
         function spectral_lut = get_spectral_lut(self) %I call the get funtion in other codes
             spectral_lut = self.spectral_lut; %I call the self.spectral_lut inside this file
+        function output_intensity = get_intensity(self)
+            output_intensity = self.output_intensity;
+        end
+        
+        function spectral_lut = get_spectral_lut(self)
+            spectral_lut = self.spectral_lut;
         end
         
         function exit_status = set_wavelength(self, required_wavelength) %no matter if the variable has the same name as before because the last one ha already been closed

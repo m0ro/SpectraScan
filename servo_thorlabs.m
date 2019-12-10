@@ -30,16 +30,17 @@ classdef servo_thorlabs < handle
             pause(0.5); 
             self.servox.MoveAbsolute(0,false);
             t1 = clock;
-            while(etime(clock,t1)<10) 
-            % wait while the motor is active; timeout to avoid dead loop
-                s = self.servox.GetStatusBits_Bits(0);
-                if (IsMoving(s) == 0)
-                  pause(2); % pause 2 seconds;
-                  self.servox.MoveHome(0,0);
-                  disp('Home Started!');
-                  break;
-                end
-            end
+            % not workign. must be eventually implemented
+%             while(etime(clock,t1)<10) 
+%             % wait while the motor is active; timeout to avoid dead loop
+%                 s = self.servox.GetStatusBits_Bits(0);
+%                 if (IsMoving(s) == 0)
+%                   pause(2); % pause 2 seconds;
+%                   self.servox.MoveHome(0,0);
+%                   disp('Home Started!');
+%                   break;
+%                 end
+%             end
 
             
         end

@@ -22,8 +22,11 @@ classdef monochromator < handle
             exit_status = 0;
         end
         
+<<<<<<< Updated upstream
         function spectral_lut = get_spectral_lut(self) %I call the get funtion in other codes
             spectral_lut = self.spectral_lut; %I call the self.spectral_lut inside this file
+=======
+>>>>>>> Stashed changes
         function output_intensity = get_intensity(self)
             output_intensity = self.output_intensity;
         end

@@ -28,36 +28,29 @@ classdef servo_thorlabs < handle
             % Indentify the device
             self.servox.Identify;
             pause(0.5); 
-            self.servox.MoveAbsolute(0,false);
-            t1 = clock;
-            % not workign. must be eventually implemented
-%             while(etime(clock,t1)<10) 
-%             % wait while the motor is active; timeout to avoid dead loop
-%                 s = self.servox.GetStatusBits_Bits(0);
-%                 if (IsMoving(s) == 0)
-%                   pause(2); % pause 2 seconds;
-%                   self.servox.MoveHome(0,0);
-%                   disp('Home Started!');
-%                   break;
-%                 end
-%             end
-
-            
+            self.servox.MoveAbsolute(0,false);          
         end
+        
         % move with absolute values
         function move_abs(self, pos)
             % absolute positioning
             self.servox.SetAbsMovePos(0,pos);
             self.servox.MoveAbsolute(0,false);
             self.position = self.servox.GetPosition_Position(0);
+            % wait until stop move (once implemented, remove the pause)
+            pause(0.5);
         end
+        
         % move with relative values
         function move_rel(self, pos)
             % relative positioning
             self.servox.SetRelMoveDist(0,pos);
             self.servox.MoveRelative(0,false);
             self.position = self.servox.GetPosition_Position(0);
+            % wait until stop move
+            pause(0.5);
         end
+        
         % delete the handle
         function delete(self)
             self.servox.delete();

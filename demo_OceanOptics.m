@@ -17,9 +17,12 @@
 % * Install OmniDriver downloadable from http://www.oceanoptics.com/
 % * OmniDriver.mdd available from MATLAB Central
 
+javaaddpath('C:\Program Files\Ocean Optics\OmniDriver\OOI_HOME\OmniDriver.jar', '-end');
+
 %% Create MATLAB Instrument OmniDriver object.
 spectrometerObj = icdevice('OceanOptics_OmniDriver.mdd');
-
+%%
+midedit('OceanOptics_OmniDriver.mdd');
 %% Connect to the instrument.
 connect(spectrometerObj);
 disp(spectrometerObj);

@@ -1,3 +1,5 @@
+%% legacy code
+
 classdef spectrometer < handle
     % spectrometer
     % connect with a spectrometer and manage interfacing

@@ -24,27 +24,15 @@ classdef spect < handle %all types of spectrometers from OceanOptics
             obj.spectrometerObj = icdevice('OceanOptics_OmniDriver.mdd');
             connect(obj.spectrometerObj);
             disp(obj.spectrometerObj)
-             
+            
             obj.numOfSpectrometer = invoke(obj.spectrometerObj, 'getNumberOfSpectrometersFound');
-            %disp(['Found ' num2str(obj.numOfSpectrometer) ' Ocean Optics spectrometer(s).'])
-
             obj.spectrometerName = invoke(obj.spectrometerObj,'getName',obj.spectrometerIndex);
-            %disp(['Model Name : ' obj.spectrometerName])
-            
             obj.spectrometerSerialNumber = invoke(obj.spectrometerObj,'getSerialNumber',obj.spectrometerIndex);
-            %disp(['Model S/N  : ' obj.spectrometerSerialNumber])
-            
             obj.integrationTime = invoke(obj.spectrometerObj, 'getIntegrationTime', obj.spectrometerIndex, obj.channelIndex, obj.integrationTime);
-%             obj.integrationTime = invoke(obj.spectrometerObj, 'setIntegrationTime', obj.spectrometerIndex, obj.channelIndex, obj.integrationTime);
-            
             obj.wavelengths = invoke(obj.spectrometerObj, 'getWavelengths', obj.spectrometerIndex, obj.channelIndex);
-            %[obj.wavelengths] = obj.wavelengths;
-
             obj.spectralData = invoke(obj.spectrometerObj, 'getSpectrum', obj.spectrometerIndex);
-            %[obj.spectralData] = obj.spectralData;
-            
-        end
 
+        end
 
         function plot(obj)
                  plot(obj.wavelengths, obj.spectralData);
@@ -65,7 +53,7 @@ classdef spect < handle %all types of spectrometers from OceanOptics
         end
         
         function acquirespectrum(obj)
-            obj.wavelengths = invoke(obj.spectrometerObj, 'getWavelengths', obj.spectrometerIndex, obj.channelIndex)
+            obj.wavelengths = invoke(obj.spectrometerObj, 'getWavelengths', obj.spectrometerIndex, obj.channelIndex);
             obj.spectralData = invoke(obj.spectrometerObj, 'getSpectrum', obj.spectrometerIndex);
         end
         

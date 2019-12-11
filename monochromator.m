@@ -22,8 +22,8 @@ classdef monochromator < handle
     end
     
     properties (Access = private)
-        min_servo_position = 8;
-        max_servo_position = 20;
+        min_servo_position = 0;
+        max_servo_position = 25;
         spectral_lut = [];
         output_intensity = [];
     end
@@ -68,7 +68,7 @@ classdef monochromator < handle
             
             function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
                 spectrometer = spect(); %here I call the class spect and name the obj as spectrometer
-                spectrometer.setintegrationTime(100000);
+                spectrometer.setintegrationTime(500000);
                 previewfig = figure('Name','preview','NumberTitle','off', 'position', [300, 300, 800, 400]);
                 while ishandle(previewfig), %while prefig is a object handle...  
                     spectrometer.acquirespectrum(); %...this acquire the spectrum
@@ -92,11 +92,11 @@ classdef monochromator < handle
                     spectrometer.acquirespectrum(); % and I acquire the spectrum
                     spectrometer.plot(); % diagnostica
                     [peak_pos, ~] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
-                    if peak_pos > start_wavelength %but if I excede the start wavelength
-                        disp('peak over the max; stop calibratio procedure.'); %I display it
+%                     if peak_pos > start_wavelength %but if I excede the start wavelength
+%                         disp('peak over the max; stop calibratio procedure.'); %I display it
                         start_servo_position = servo_pos-search_step; %and I go one step back
-                        break
-                    end
+%                         break
+%                     end
                 end
                 % verify if the point will be taken are enough for the fit,
                 % if not, refine the step
@@ -129,7 +129,7 @@ classdef monochromator < handle
                 output_intensity = self.output_intensity;
             end
             
-            function exit_status = set_wavelength(obj, wavelength) %no matter if the variable has the same name as before because the last one ha already been closed
+            function exit_status = set_wavelength(obj,wavelength) %no matter if the variable has the same name as before because the last one ha already been closed
                 exit_status = 1;
             end            
     end

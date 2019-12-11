@@ -61,42 +61,30 @@ classdef monochromator < handle
                 zlabel('bandwidth(nm)')
             end
             
+                        
             function [peak_pos, peak_intensity] = search_peak(obj, wavelenghts, spectrum) %store the peak position and intensity in a set...
                 [peak_intensity, argmax] = max(spectrum); %...and find the maximum value...
                 peak_pos = wavelenghts(argmax); %...and the corresponding wavelength
             end
             
-            function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
-                spectrometer = spect(); %here I call the class spect and name the obj as spectrometer
-                spectrometer.setintegrationTime(500000);
-                previewfig = figure('Name','preview','NumberTitle','off', 'position', [300, 300, 800, 400]);
-                while ishandle(previewfig), %while prefig is a object handle...  
-                    spectrometer.acquirespectrum(); %...this acquire the spectrum
-                    spectrometer.plot(); %...and plot it...
-                    pbaspect([1 1 1]); %...with an axis proportion 1:1
-                    drawnow %this thing limits the updates to 20 frames per second
-                end
-                exit_status = 0;
-            end
-        
             function exit_status = start_calibration(obj, start_wavelength, stop_wavelength)
-                search_step = 0.1; %the step it will do to look for the starting wavelength
                 servo_monochromator_serial = 83847443;
                 servo = servo_thorlabs(servo_monochromator_serial); %I call the servo_thorlabs for the first time and name the obj as servo
                 servo.move_abs(obj.min_servo_position); %I tell it to move in the minimum servo position I set at the beginning
                 spectrometer = spect(); % I call the spectrometer
                 % search for starting point
+                search_step = 0.1; %the step it will do to look for the starting wavelength
                 for servo_pos = obj.min_servo_position:search_step:obj.max_servo_position %I do steps from the min to max pos
                     disp(servo_pos); % I display it
                     servo.move_abs(servo_pos); % I move absolutely to all position
                     spectrometer.acquirespectrum(); % and I acquire the spectrum
                     spectrometer.plot(); % diagnostica
                     [peak_pos, ~] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
-%                     if peak_pos > start_wavelength %but if I excede the start wavelength
+                    if peak_pos = start_wavelength %but if I excede the start wavelength
 %                         disp('peak over the max; stop calibratio procedure.'); %I display it
-                        start_servo_position = servo_pos-search_step; %and I go one step back
-%                         break
-%                     end
+                        start_servo_position = servo_pos %-search_step; %and I go one step back
+                        break
+                    end
                 end
                 % verify if the point will be taken are enough for the fit,
                 % if not, refine the step
@@ -114,12 +102,27 @@ classdef monochromator < handle
                 end
                 % fit the LUT with a function
                 % store the fitting function parameters
-                
+
                 % clean
                 delete(servo);
                 delete(spectrometer);
                 exit_status = 1;
             end
+
+            
+            function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
+                spectrometer = spect(); %here I call the class spect and name the obj as spectrometer
+                spectrometer.setintegrationTime(500000);
+                previewfig = figure('Name','preview','NumberTitle','off', 'position', [300, 300, 800, 400]);
+                while ishandle(previewfig), %while prefig is a object handle...  
+                    spectrometer.acquirespectrum(); %...this acquire the spectrum
+                    spectrometer.plot(); %...and plot it...
+                    pbaspect([1 1 1]); %...with an axis proportion 1:1
+                    drawnow %this thing limits the updates to 20 frames per second
+                end
+                exit_status = 0;
+            end
+
             
             function spectral_lut = get_spectral_lut(self) %I call the get funtion in other codes
                 spectral_lut = self.spectral_lut; %I call the self.spectral_lut inside this file

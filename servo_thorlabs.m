@@ -28,14 +28,14 @@ classdef servo_thorlabs < handle
             % Indentify the device
             self.servox.Identify;
             pause(0.5); 
-            self.servox.MoveAbsolute(0,false);          
+            self.servox.MoveAbsolute(0,false);  %--------------------------------------------------------???What does it mean here???         
         end
         
         % move with absolute values
         function move_abs(self, pos)
             % absolute positioning
             self.servox.SetAbsMovePos(0,pos);
-            self.servox.MoveAbsolute(0,false);
+            self.servox.MoveAbsolute(0,false); %------------------------------------------------------------the same here
             self.position = self.servox.GetPosition_Position(0);
             % wait until stop move (once implemented, remove the pause)
             pause(0.5);
@@ -45,7 +45,7 @@ classdef servo_thorlabs < handle
         function move_rel(self, pos)
             % relative positioning
             self.servox.SetRelMoveDist(0,pos);
-            self.servox.MoveRelative(0,false);
+            self.servox.MoveRelative(0,false); %--------------------------------------------------------------the same here
             self.position = self.servox.GetPosition_Position(0);
             % wait until stop move
             pause(0.5);

@@ -81,7 +81,7 @@ classdef monochromator < handle
                     [peak_pos, ~] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
                     if peak_pos > start_wavelength %but if I excede the start wavelength
                         disp('peak over the max; stop calibration procedure.'); %I display it
-                        start_servo_position = servo_pos-search_step; %and I go one step back
+                        start_servo_position = servo_pos %-search_step; %and I go one step back
                         break
                     end
                     disp('nananan'); %just to know if it goes out of the cycle

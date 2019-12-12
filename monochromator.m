@@ -22,8 +22,8 @@ classdef monochromator < handle
     end
     
     properties (Access = private)
-        min_servo_position = 0;
-        max_servo_position = 25;
+        min_servo_position = 6.70;
+        max_servo_position = 12.40;
         spectral_lut = [];
         output_intensity = [];
     end
@@ -81,7 +81,8 @@ classdef monochromator < handle
                     [peak_pos, ~] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
                     if peak_pos > start_wavelength %but if I excede the start wavelength
                         disp('peak over the max; stop calibration procedure.'); %I display it
-                        start_servo_position = servo_pos %-search_step; %and I go one step back
+                        start_servo_position = max(servo_pos - search_step, 0); %and I go one step back
+                        disp('min wavelength not accessible');
                         break
                     end
                     disp('nananan'); %just to know if it goes out of the cycle
@@ -111,7 +112,7 @@ classdef monochromator < handle
 
             function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
                 spectrometer = spect(); %here I call the class spect and name the obj as spectrometer
-                spectrometer.setintegrationTime(500000);
+                spectrometer.setintegrationTime(1000000);
                 previewfig = figure('Name','preview','NumberTitle','off', 'position', [300, 300, 800, 400]);
                 while ishandle(previewfig), %while prefig is a object handle...  
                     spectrometer.acquirespectrum(); %...this acquire the spectrum
@@ -132,6 +133,15 @@ classdef monochromator < handle
             
             function exit_status = set_wavelength(obj,wavelength) %no matter if the variable has the same name as before because the last one ha already been closed
                 exit_status = 1;
-            end            
+            end    
+            
+            
+            function [spectrum, wavelengths] = acquirespectrum(obj) %exit status it's an object that appears and then disappears
+                spectrometer = spect(); %here I call the class spect and name the obj as spectrometer
+                spectrometer.setintegrationTime(1000000);
+                spectrometer.acquirespectrum(); %...this acquire the spectrum
+                spectrum = spectrometer.spectralData;
+                wavelengths = spectrometer.wavelengths;
+            end
     end
 end  

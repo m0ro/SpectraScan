@@ -61,45 +61,112 @@ classdef monochromator < handle
                 zlabel('bandwidth(nm)')
             end
                      
-            function [peak_pos, peak_intensity] = search_peak(obj, wavelengths, spectrum) %store the peak position and intensity in a set...
+            function [peak_pos, peak_intensity, peak_width, off_set, rsquare] = search_peak(obj, wavelengths, spectrum) %store the peak position and intensity in a set...
+                verbosity = true;
                 [peak_intensity, argmax] = max(spectrum); %...and find the maximum value...
                 peak_pos = wavelengths(argmax); %...and the corresponding wavelength
+                
+                [xData, yData] = prepareCurveData( wavelengths, spectrum );
+                % Set up fittype and options.
+                ft = fittype( 'a*exp(-((x-b)/c)^2)+d', 'independent', 'x', 'dependent', 'y' );
+                opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
+                opts.Display = 'Off';
+                opts.StartPoint = [peak_intensity peak_pos 2 mean(spectrum)];
+                % Fit model to data.
+                [fitresult, gof] = fit( xData, yData, ft, opts );
+                
+                peak_pos = fitresult.b;
+                peak_intensity = fitresult.a;
+                peak_width = fitresult.c;
+                off_set = fitresult.d;
+                rsquare = gof.rsquare;
+                if verbosity                
+                    % Plot fit with data.
+                    figure( 'Name', 'untitled fit 1' );
+                    h = plot( fitresult, xData, yData );
+                    legend( h, 'spec vs. wave', 'untitled fit 1', 'Location', 'NorthEast', 'Interpreter', 'none' );
+                    % Label axes
+                    xlabel( 'wave', 'Interpreter', 'none' );
+                    ylabel( 'spec', 'Interpreter', 'none' );
+                    grid on
+                end
+                
             end
             
             function exit_status = start_calibration(obj, start_wavelength, stop_wavelength)
+                verbosity = true;
                 servo_monochromator_serial = 83847443;
                 servo = servo_thorlabs(servo_monochromator_serial); %I call the servo_thorlabs for the first time and name the obj as servo
                 servo.move_abs(obj.min_servo_position); %I tell it to move in the minimum servo position I set at the beginning
                 spectrometer = spect(); % I call the spectrometer
+                spectrometer.setintegrationTime(50000);
                 % search for starting point
                 search_step = 0.1; %the step it will do to look for the starting wavelength
+                start_servo_position = 0;
+                last_detected = false;
                 for servo_pos = obj.min_servo_position:search_step:obj.max_servo_position %I do steps from the min to max pos
-                    disp(servo_pos); % I display it
+                    if verbosity
+                        disp(servo_pos); % I display it
+                    end
                     servo.move_abs(servo_pos); % I move absolutely to all position
                     spectrometer.acquirespectrum(); % and I acquire the spectrum
                     spectrometer.plot(); % diagnostica
-                    [peak_pos, ~] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
+                    [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
+                    if rsquare < 0.2
+                        if verbosity
+                            disp(rsquare);
+                            disp('r square low');
+                        end
+                        last_detected = false;
+                        continue
+                    end
+                    if (0.6 > peak_width) && (peak_width > 5)
+                        if verbosity
+                            disp('bad width');
+                        end
+                        last_detected = false;
+                        continue
+                    end
+                    
+                    if peak_pos < start_wavelength %but if I excede the start wavelength
+                        last_detected = true;
+                        continue
+                    end   
+                    
                     if peak_pos > start_wavelength %but if I excede the start wavelength
-                        disp('peak over the max; stop calibration procedure.'); %I display it
-                        start_servo_position = max(servo_pos - search_step, 0); %and I go one step back
-                        disp('min wavelength not accessible');
+                        if last_detected == true
+                            disp('starting position detected!');
+                            start_servo_position = servo_pos-search_step;
+                            break
+                        end
+                        start_servo_position == 0;
+                        disp('first detected peak over the nedeed start wavelength; stop calibration procedure.'); %I display it
                         break
                     end
-                    disp('nananan'); %just to know if it goes out of the cycle
+                     
+                end
+                if start_servo_position == 0
+                    disp('something went wrong on guessing the initial position');
                 end
                 % verify if the point will be taken are enough for the fit,
                 % if not, refine the step
                 % go over the needed range and build the LUT
                 obj.spectral_lut = [];
+                obj.output_intensity = [];
                 for servo_pos = start_servo_position:search_step:obj.max_servo_position
                     servo.move_abs(servo_pos);
                     spectrometer.acquirespectrum();
-                    [peak_pos, peak_intensity] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData);
+                    [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData);
                     if peak_pos > stop_wavelength
                         break
                     end
-                    obj.spectral_lut = [obj.spectral_lut [servo_pos peak_pos]];
-                    obj.output_intensity = [obj.output_intensity [servo_pos peak_intensity]];
+                    if (0.6 < peak_width) && (peak_width < 5)
+                        if verbosity
+                                disp('recording data');
+                        end
+                        obj.spectral_lut = [obj.spectral_lut; [servo_pos peak_pos]];
+                        obj.output_intensity = [obj.output_intensity; [servo_pos peak_intensity]];
+                    end
                 end
                 % fit the LUT with a function
                 % store the fitting function parameters

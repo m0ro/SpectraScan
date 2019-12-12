@@ -60,11 +60,10 @@ classdef monochromator < handle
                 ylabel('angle_between_rays(rad))')
                 zlabel('bandwidth(nm)')
             end
-            
-                        
-            function [peak_pos, peak_intensity] = search_peak(obj, wavelenghts, spectrum) %store the peak position and intensity in a set...
+                     
+            function [peak_pos, peak_intensity] = search_peak(obj, wavelengths, spectrum) %store the peak position and intensity in a set...
                 [peak_intensity, argmax] = max(spectrum); %...and find the maximum value...
-                peak_pos = wavelenghts(argmax); %...and the corresponding wavelength
+                peak_pos = wavelengths(argmax); %...and the corresponding wavelength
             end
             
             function exit_status = start_calibration(obj, start_wavelength, stop_wavelength)
@@ -80,18 +79,19 @@ classdef monochromator < handle
                     spectrometer.acquirespectrum(); % and I acquire the spectrum
                     spectrometer.plot(); % diagnostica
                     [peak_pos, ~] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData); % I store it in a set
-                    if peak_pos = start_wavelength %but if I excede the start wavelength
-%                         disp('peak over the max; stop calibratio procedure.'); %I display it
-                        start_servo_position = servo_pos %-search_step; %and I go one step back
+                    if peak_pos > start_wavelength %but if I excede the start wavelength
+                        disp('peak over the max; stop calibration procedure.'); %I display it
+                        start_servo_position = servo_pos-search_step; %and I go one step back
                         break
                     end
+                    disp('nananan'); %just to know if it goes out of the cycle
                 end
                 % verify if the point will be taken are enough for the fit,
                 % if not, refine the step
                 % go over the needed range and build the LUT
                 obj.spectral_lut = [];
                 for servo_pos = start_servo_position:search_step:obj.max_servo_position
-                    servo.move_abs(servo_pos); %------------------------------------------------------shouldn't move_rel be used?
+                    servo.move_abs(servo_pos);
                     spectrometer.acquirespectrum();
                     [peak_pos, peak_intensity] = obj.search_peak(spectrometer.wavelengths, spectrometer.spectralData);
                     if peak_pos > stop_wavelength
@@ -109,7 +109,6 @@ classdef monochromator < handle
                 exit_status = 1;
             end
 
-            
             function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
                 spectrometer = spect(); %here I call the class spect and name the obj as spectrometer
                 spectrometer.setintegrationTime(500000);
@@ -122,8 +121,7 @@ classdef monochromator < handle
                 end
                 exit_status = 0;
             end
-
-            
+  
             function spectral_lut = get_spectral_lut(self) %I call the get funtion in other codes
                 spectral_lut = self.spectral_lut; %I call the self.spectral_lut inside this file
             end

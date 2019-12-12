@@ -35,12 +35,12 @@ classdef spect < handle %all types of spectrometers from OceanOptics
         end
 
         function plot(obj)
-                 plot(obj.wavelengths, obj.spectralData);
-                 title('Optical Spectrum');
-                 ylabel('Intensity (counts)');
-                 xlabel('\lambda (nm)');
-                 grid on
-                 axis tight
+             plot(obj.wavelengths, obj.spectralData);
+             title('Optical Spectrum');
+             ylabel('Intensity (a.u.)');
+             xlabel('\lambda (nm)');
+             grid on
+             axis tight
         end
         
         function setintegrationTime(obj, newintegrationTime)

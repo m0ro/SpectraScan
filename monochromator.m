@@ -183,17 +183,23 @@ classdef monochromator < handle
         end
 
         function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
-            obj.spectrometer.setintegrationTime(obj.integrationTime);
+            obj.spectrometer.setintegrationTime(obj.integrationTime); 
             previewfig = figure('Name','preview','NumberTitle','off', 'position', [300, 300, 800, 400]);
             while ishandle(previewfig), %while prefig is a object handle...  
                 obj.spectrometer.acquirespectrum(); %...this acquire the spectrum
                 [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(obj.spectrometer.wavelengths, obj.spectrometer.spectralData);
-                stt = strcat(num2str(peak_pos), ' nm,  ', num2str(peak_width), ' nm');
-                disp(stt);
-                xminn = min(obj.spectrometer.wavelengths+5);
-                yminn = min(obj.spectrometer.spectralData);
+                stt = strcat(num2str(peak_pos), ' nm : ', num2str(peak_width), ' nm');
+                xminn = min(obj.spectrometer.wavelengths)+20;
+                yminn = max(obj.spectrometer.spectralData)-std(obj.spectrometer.spectralData);
+                
+                plot(obj.spectrometer.wavelengths, obj.spectrometer.spectralData);
                 text(xminn, yminn, stt);
-                obj.spectrometer.plot(); %...and plot it...
+                
+                title('Optical Spectrum');
+                ylabel('Intensity (a.u.)');
+                xlabel('\lambda (nm)');
+                grid on
+                axis tight
                 pbaspect([1 1 1]); %...with an axis proportion 1:1
                 drawnow %this thing limits the updates to 20 frames per second
             end

@@ -22,9 +22,13 @@ classdef monochromator < handle
     end
     
     properties (Access = private)
+        %%%%%%%%%% those two parameters depends on the optical configuration
         min_servo_position = 6.70;
         max_servo_position = 12.40;
+        %%%%%%%%%% this depend on the driver used (assumed to be a thorlabs
+        %%%%%%%%%% dc servo motor
         servo_monochromator_serial = 83847443;
+        
         integrationTime = 100000;
         spectral_lut = [];
         output_intensity = [];
@@ -48,6 +52,9 @@ classdef monochromator < handle
             end
             obj.spectrometer = spect();
             obj.servo = servo_thorlabs(obj.servo_monochromator_serial);
+            % move to a kind of central position, where we hope to have
+            % some signal
+            obj.servo.move_abs(mean([min_servo_position max_servo_position]));
         end
         
         function delete(obj)
@@ -56,6 +63,7 @@ classdef monochromator < handle
         end
              
         function bandwidth = get.bandwidth(obj)
+            % or we should just measure it with the fit?
             bandwidth = obj.exit_slit.*(cos(asin((obj.diffraction_order.*obj.grooves_density.*obj.wavelength.*10^(-6))./(2.*cos(obj.angle_between_rays/2)))-obj.angle_between_rays/2).*obj.exit_arm)./(cos(obj.angle_between_rays + asin((obj.diffraction_order.*obj.grooves_density.*obj.wavelength.*10^(-6))./(2.*cos(obj.angle_between_rays/2)))-obj.angle_between_rays/2).*obj.entrance_arm).*(cos(obj.angle_between_rays + asin((obj.diffraction_order.*obj.grooves_density.*obj.wavelength.*10^(-6))./(2.*cos(obj.angle_between_rays/2)))-obj.angle_between_rays/2).*10^6)./(obj.diffraction_order.*obj.grooves_density.*obj.exit_arm);
         end
 
@@ -93,7 +101,7 @@ classdef monochromator < handle
             rsquare = gof.rsquare;
             if verbosity                
                 % Plot fit with data.
-                figure( 'Name', 'untitled fit 1' );
+                figure( 'Name', 'fitting stuff' );
                 h = plot( fitresult, xData, yData );
                 legend( h, 'spec vs. wave', 'untitled fit 1', 'Location', 'NorthEast', 'Interpreter', 'none' );
                 % Label axes
@@ -178,13 +186,13 @@ classdef monochromator < handle
             end
             % fit the LUT with a function
             % store the fitting function parameters
-
+            disp('calibration ended succefully');
             exit_status = 1;
         end
 
         function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
             obj.spectrometer.setintegrationTime(obj.integrationTime); 
-            previewfig = figure('Name','preview','NumberTitle','off', 'position', [300, 300, 800, 400]);
+            previewfig = figure('Name','Spectrometer','NumberTitle','off', 'position', [300, 300, 800, 400]);
             while ishandle(previewfig), %while prefig is a object handle...  
                 obj.spectrometer.acquirespectrum(); %...this acquire the spectrum
                 [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(obj.spectrometer.wavelengths, obj.spectrometer.spectralData);
@@ -205,9 +213,16 @@ classdef monochromator < handle
             end
             exit_status = 0;
         end
+        
 
-        function spectral_lut = get_spectral_lut(obj) %I call the get funtion in other codes
+        function spectral_lut = get_spectral_lut(obj)
+            % return the lut
             spectral_lut = obj.spectral_lut; %I call the self.spectral_lut inside this file
+        end
+        
+        function set_spectral_lut(obj, lut)
+            % load a saved spectral lut
+            obj.spectral_lut = lut;
         end
 
         function output_intensity = get_intensity(self)

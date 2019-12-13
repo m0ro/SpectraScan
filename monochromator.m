@@ -52,9 +52,11 @@ classdef monochromator < handle
             end
             obj.spectrometer = spect();
             obj.servo = servo_thorlabs(obj.servo_monochromator_serial);
+            % pause a little until the driver is ready`
+            pause(5);
             % move to a kind of central position, where we hope to have
             % some signal
-            obj.servo.move_abs(mean([min_servo_position max_servo_position]));
+            obj.servo.move_abs(mean([obj.min_servo_position obj.max_servo_position]));
         end
         
         function delete(obj)
@@ -186,7 +188,7 @@ classdef monochromator < handle
             end
             % fit the LUT with a function
             % store the fitting function parameters
-            disp('calibration ended succefully');
+            disp('calibration ended');
             exit_status = 1;
         end
 

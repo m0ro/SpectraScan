@@ -37,19 +37,9 @@ classdef monochromator < handle
     end
     
     methods
-        function obj = monochromator(wavelength,diffraction_order,...
-                grooves_density,entrance_arm,exit_arm,entrance_slit,...
-                exit_slit,angle_between_rays)
-            if nargin > 0
-                obj.wavelength = wavelength;
-                obj.diffraction_order = diffraction_order;
-                obj.grooves_density = grooves_density;
-                obj.entrance_arm = entrance_arm;
-                obj.exit_arm = exit_arm;
-                obj.entrance_slit = entrance_slit;
-                obj.exit_slit = exit_slit;
-                obj.angle_between_rays = angle_between_rays;
-            end
+        % it's neede to declare the construction function with all these
+        % variables?
+        function obj = monochromator()
             obj.spectrometer = spect();
             obj.servo = servo_thorlabs(obj.servo_monochromator_serial);
             % pause a little until the driver is ready`
@@ -62,6 +52,21 @@ classdef monochromator < handle
         function delete(obj)
             delete(obj.servo);
             delete(obj.spectrometer);
+        end
+        
+        function set_hw_parameters(wavelength,diffraction_order,...
+                grooves_density,entrance_arm,exit_arm,entrance_slit,...
+                exit_slit,angle_between_rays)
+            if nargin > 0
+                obj.wavelength = wavelength;
+                obj.diffraction_order = diffraction_order;
+                obj.grooves_density = grooves_density;
+                obj.entrance_arm = entrance_arm;
+                obj.exit_arm = exit_arm;
+                obj.entrance_slit = entrance_slit;
+                obj.exit_slit = exit_slit;
+                obj.angle_between_rays = angle_between_rays;
+            end
         end
              
         function bandwidth = get.bandwidth(obj)
@@ -84,7 +89,7 @@ classdef monochromator < handle
 
         function [peak_pos, peak_intensity, peak_width, off_set, rsquare] = search_peak(obj, wavelengths, spectrum) %store the peak position and intensity in a set...
             verbosity = false;
-            [peak_intensity, argmax] = max(spectrum); %...and find the maximum value...
+            [peak_intensity, argmax] = max(spectrum); % find the maximum value in the array
             peak_pos = wavelengths(argmax); %...and the corresponding wavelength
 
             [xData, yData] = prepareCurveData( wavelengths, spectrum );
@@ -92,7 +97,8 @@ classdef monochromator < handle
             ft = fittype( 'a*exp(-((x-b)/c)^2)+d', 'independent', 'x', 'dependent', 'y' );
             opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
             opts.Display = 'Off';
-            opts.StartPoint = [peak_intensity peak_pos 2 mean(spectrum)];
+            peak_width = 2;
+            opts.StartPoint = [peak_intensity peak_pos peak_width mean(spectrum)];
             % Fit model to data.
             [fitresult, gof] = fit( xData, yData, ft, opts );
 
@@ -114,6 +120,10 @@ classdef monochromator < handle
 
         end
 
+        function go_somewhere_in_the_middle(obj)
+            obj.servo.move_abs(mean([obj.min_servo_position obj.max_servo_position]));
+        end
+        
         function exit_status = start_calibration(obj, start_wavelength, stop_wavelength, search_step)
             verbosity = false;
 
@@ -122,6 +132,7 @@ classdef monochromator < handle
             % search for starting point
             start_servo_position = 0;
             last_detected = false;
+            pause(7); % must be checked. if not needed, remove
             for servo_pos = obj.min_servo_position:search_step:obj.max_servo_position %I do steps from the min to max pos
                 if verbosity
                     disp(servo_pos); % I display it
@@ -130,10 +141,10 @@ classdef monochromator < handle
                 obj.spectrometer.acquirespectrum(); % and I acquire the spectrum
                 obj.spectrometer.plot(); % diagnostica
                 [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(obj.spectrometer.wavelengths, obj.spectrometer.spectralData); % I store it in a set
-                if rsquare < 0.2
+                if rsquare < 0.5
                     if verbosity
                         disp(rsquare);
-                        disp('r square low');
+                        disp('r too square low');
                     end
                     last_detected = false;
                     continue
@@ -165,6 +176,7 @@ classdef monochromator < handle
             end
             if start_servo_position == 0
                 disp('something went wrong on guessing the initial position');
+                go_somewhere_in_the_middle();
             end
             % verify if the point will be taken are enough for the fit,
             % if not, refine the step
@@ -215,7 +227,6 @@ classdef monochromator < handle
             end
             exit_status = 0;
         end
-        
 
         function spectral_lut = get_spectral_lut(obj)
             % return the lut
@@ -248,11 +259,11 @@ classdef monochromator < handle
         end    
 
 
-        function [spectrum, wavelengths] = acquirespectrum(obj) %exit status it's an object that appears and then disappears
-            obj.spectrometer.setintegrationTime(obj.integrationTime);
-            obj.spectrometer.acquirespectrum(); %...this acquire the spectrum
-            spectrum = obj.spectrometer.spectralData;
-            wavelengths = obj.spectrometer.wavelengths;
-        end
+%         function [spectrum, wavelengths] = acquirespectrum(obj) %exit status it's an object that appears and then disappears
+%             obj.spectrometer.setintegrationTime(obj.integrationTime);
+%             obj.spectrometer.acquirespectrum(); %...this acquire the spectrum
+%             spectrum = obj.spectrometer.spectralData;
+%             wavelengths = obj.spectrometer.wavelengths;
+%         end
     end
 end  

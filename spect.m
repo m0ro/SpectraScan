@@ -31,7 +31,6 @@ classdef spect < handle %all types of spectrometers from OceanOptics
             obj.integrationTime = invoke(obj.spectrometerObj, 'getIntegrationTime', obj.spectrometerIndex, obj.channelIndex, obj.integrationTime);
             obj.wavelengths = invoke(obj.spectrometerObj, 'getWavelengths', obj.spectrometerIndex, obj.channelIndex);
             obj.spectralData = invoke(obj.spectrometerObj, 'getSpectrum', obj.spectrometerIndex);
-
         end
 
         function plot(obj)
@@ -52,9 +51,11 @@ classdef spect < handle %all types of spectrometers from OceanOptics
             end
         end
         
-        function acquirespectrum(obj)
+        function [spectrum, wavelengths] = acquirespectrum(obj)
             obj.wavelengths = invoke(obj.spectrometerObj, 'getWavelengths', obj.spectrometerIndex, obj.channelIndex);
             obj.spectralData = invoke(obj.spectrometerObj, 'getSpectrum', obj.spectrometerIndex);
+            spectrum = obj.wavelengths;
+            wavelengths = obj.spectralData;
         end
         
         function delete(obj)

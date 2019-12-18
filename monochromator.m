@@ -132,7 +132,7 @@ classdef monochromator < handle
             % search for starting point
             start_servo_position = 0;
             last_detected = false;
-            pause(7); % must be checked. if not needed, remove
+            pause(7); % must be checked. if not needed, remove; if needed, comment on why is needed
             for servo_pos = obj.min_servo_position:search_step:obj.max_servo_position %I do steps from the min to max pos
                 if verbosity
                     disp(servo_pos); % I display it
@@ -168,7 +168,7 @@ classdef monochromator < handle
                         start_servo_position = servo_pos-search_step;
                         break
                     end
-                    start_servo_position == 0;
+                    start_servo_position = 0;
                     disp('first detected peak over the nedeed start wavelength; stop calibration procedure.'); %I display it
                     break
                 end
@@ -176,13 +176,19 @@ classdef monochromator < handle
             end
             if start_servo_position == 0
                 disp('something went wrong on guessing the initial position');
+                disp('quitting calibration procedure...');
                 go_somewhere_in_the_middle();
+                exit_status = 1;
+                return
             end
-            % verify if the point will be taken are enough for the fit,
-            % if not, refine the step
-            % go over the needed range and build the LUT
+            % if everything went well now, go on with the calibration from
+            % the starting point
+            
+            % go over the needed range and build the LUT which will be used
+            % to calculate the relationship between position and wavelength
             obj.spectral_lut = [];
             obj.output_intensity = [];
+            
             for servo_pos = start_servo_position:search_step:obj.max_servo_position
                 obj.servo.move_abs(servo_pos);
                 obj.spectrometer.acquirespectrum();
@@ -200,8 +206,9 @@ classdef monochromator < handle
             end
             % fit the LUT with a function
             % store the fitting function parameters
-            disp('calibration ended');
-            exit_status = 1;
+            disp('calibration ended successfully');
+            exit_status = 0;
+            return
         end
 
         function exit_status = show_spectra_live(obj) %exit status it's an object that appears and then disappears
@@ -242,7 +249,10 @@ classdef monochromator < handle
             output_intensity = self.output_intensity;
         end
 
-        function measured_wavength = set_wavelength(obj,wavelength) %no matter if the variable has the same name as before because the last one ha already been closed
+        function measured_wavength = set_wavelength(obj, wavelength, PID) %no matter if the variable has the same name as before because the last one ha already been closed
+            if nargin < 3
+                PID = 0;
+            end
             servo_pos = obj.spectral_lut(:,1);
             wavelegths = obj.spectral_lut(:,2);
 
@@ -253,9 +263,21 @@ classdef monochromator < handle
             obj.servo.move_abs(needed_servo_pos);
             
             obj.spectrometer.acquirespectrum();
-            [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(obj.spectrometer.wavelengths, obj.spectrometer.spectralData);
+            [peak_pos, peak_intensity, peak_width, off_set, rsquare] = ...
+                obj.search_peak(obj.spectrometer.wavelengths, obj.spectrometer.spectralData);
             obj.wavelength = peak_pos;
             measured_wavength = obj.wavelength;
+            % end the wavelength search if no extra precision is needed
+            if PID == 0
+                return
+            end
+            % if PID (
+            % https://en.wikipedia.org/wiki/PID_controller
+            % ) is set, the monochromator will try to get closer to the 
+            % needed wavelentgh
+            p = 0;
+            i = 0;
+            d = 0;
         end    
 
 

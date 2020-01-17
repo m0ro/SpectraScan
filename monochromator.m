@@ -21,9 +21,9 @@ classdef monochromator < handle
 %         exit_angle
     end
     
-    properties (Access = private)
+    properties (Access = public)
         %%%%%%%%%% those two parameters depends on the optical configuration
-        min_servo_position = 6.70;
+        min_servo_position = 5.70;
         max_servo_position = 12.40;
         %%%%%%%%%% this depend on the driver used (assumed to be a thorlabs
         %%%%%%%%%% dc servo motor
@@ -125,7 +125,7 @@ classdef monochromator < handle
         end
         
         function exit_status = start_calibration(obj, start_wavelength, stop_wavelength, search_step)
-            verbosity = false;
+            verbosity = true;
 
             obj.servo.move_abs(obj.min_servo_position); %I tell it to move in the minimum servo position I set at the beginning
             obj.spectrometer.setintegrationTime(obj.integrationTime);
@@ -141,7 +141,7 @@ classdef monochromator < handle
                 obj.spectrometer.acquirespectrum(); % and I acquire the spectrum
                 obj.spectrometer.plot(); % diagnostica
                 [peak_pos, peak_intensity, peak_width, off_set, rsquare] = obj.search_peak(obj.spectrometer.wavelengths, obj.spectrometer.spectralData); % I store it in a set
-                if rsquare < 0.5
+                if rsquare < 0.2
                     if verbosity
                         disp(rsquare);
                         disp('r too square low');
@@ -201,7 +201,7 @@ classdef monochromator < handle
                             disp('recording data');
                     end
                     obj.spectral_lut = [obj.spectral_lut; [servo_pos peak_pos]];
-                    obj.output_intensity = [obj.output_intensity; [servo_pos peak_intensity]];
+                    obj.output_intensity = [obj.output_intensity; [peak_pos peak_intensity]];
                 end
             end
             % fit the LUT with a function

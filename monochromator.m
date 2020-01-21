@@ -125,7 +125,7 @@ classdef monochromator < handle
         end
         
         function exit_status = start_calibration(obj, start_wavelength, stop_wavelength, search_step)
-            verbosity = true;
+            verbosity = false;
 
             obj.servo.move_abs(obj.min_servo_position); %I tell it to move in the minimum servo position I set at the beginning
             obj.spectrometer.setintegrationTime(obj.integrationTime);

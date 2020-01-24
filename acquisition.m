@@ -25,10 +25,68 @@ mono.show_spectra_live();
 %% perform the calibration
 mono.start_calibration(500,700,0.1)    
 %% Intensity distribution
-%figure()
-%plot(mono.output_intensity(:,1),mono.output_intensity(:,2),'-o')
+figure()
+plot(mono.output_intensity(:,1),mono.output_intensity(:,2),'-o')
 Iout = mono.output_intensity(:,2);
-%% go to a wavelegnth, show the speckle at the camera, and allow the selection of a ROI
+%% variation of contrast with z movement and image of the camera
+PCOsrc.E2ExposureTime = 100;
+T=0;
+fig = figure()
+
+while ishandle(fig)
+    imagesc(getsnapshot(PCOvid)); daspect([1 1 1])
+    colorbar
+    pause(0.01)
+      datatry = getsnapshot(PCOvid);
+      Iy =[];
+      pause(0.05)
+      for i = 1:size(datatry,1)
+        Iy = [Iy mean(datatry(i,:))];
+      end
+      
+      [peak_intensityy, argmaxy] = max(Iy);
+        peak_posy = argmaxy;
+        [xDatay, yDatay] = prepareCurveData( 1:size(datatry,1), Iy );
+        fty = fittype( 'a2*exp(-0.5*((x-b2)/c2)^2)+d2', 'independent', 'x', 'dependent', 'y' );
+        optsy = fitoptions( 'Method', 'NonlinearLeastSquares' );
+        optsy.Display = 'Off';
+        peak_widthy = 500;
+        optsy.StartPoint = [peak_intensityy peak_posy peak_widthy 100];
+        [fitresulty, gof] = fit( xDatay, yDatay, fty, optsy );
+
+        
+        peak_posy = fitresulty.b2;
+        peak_intensityy = fitresulty.a2;
+        peak_widthy = 2.35482*abs(fitresulty.c2);
+        off_sety = fitresulty.d2;
+
+        Ix = [];
+        for u = 1:size(datatry,2)
+            Ix = [Ix mean(datatry(:,u))];
+        end
+
+        [peak_intensityx, argmaxx] = max(Ix);
+        peak_posx = argmaxx;
+        [xDatax, yDatax] = prepareCurveData( 1:size(datatry,2), Ix );
+        ftx = fittype( 'a1*exp(-0.5*((x-b1)/c1)^2)+d1', 'independent', 'x', 'dependent', 'y' );
+        optsx = fitoptions( 'Method', 'NonlinearLeastSquares' );
+        optsx.Display = 'Off';
+        peak_widthx = 350;
+        optsx.StartPoint = [peak_intensityx peak_posx peak_widthx 100];
+        [fitresultx, gof] = fit( xDatax, yDatax, ftx, optsx );
+
+        
+        peak_posx = fitresultx.b1;
+        peak_intensityx = fitresultx.a1;
+        peak_widthx = 2.35482*abs(fitresultx.c1);
+        off_setx = fitresultx.d1;
+        datacropped = datatry((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
+        pause(0.05)
+        imagesc(datatry); daspect([1 1 1])
+        colorbar
+        contrasts =  std2(datacropped)/mean(mean(datacropped))
+ end
+%% go to a wavelength, show the speckle at the camera, and allow the selection of a ROI
 wav = mono.set_wavelength(600);
 fprintf('set to wavelength %.1f\n', wav);
 pause(1)
@@ -40,50 +98,50 @@ Iy =[];
 for i = 1:size(data,1)
     Iy = [Iy mean(data(i,:))];
 end
-%figure()
-%hold on
-%plot(1:size(data,1),Iy)
+figure()
+hold on
+plot(1:size(data,1),Iy)
 
 [peak_intensityy, argmaxy] = max(Iy);
 peak_posy = argmaxy;
 [xDatay, yDatay] = prepareCurveData( 1:size(data,1), Iy );
-fty = fittype( 'a2*exp(-((x-b2)/c2)^2)+d2', 'independent', 'x', 'dependent', 'y' );
+fty = fittype( 'a2*exp(-0.5*((x-b2)/c2)^2)+d2', 'independent', 'x', 'dependent', 'y' );
 optsy = fitoptions( 'Method', 'NonlinearLeastSquares' );
 optsy.Display = 'Off';
 peak_widthy = 500;
 optsy.StartPoint = [peak_intensityy peak_posy peak_widthy 100];
 [fitresulty, gof] = fit( xDatay, yDatay, fty, optsy );
 
-%plot(fitresulty)
+plot(fitresulty)
 peak_posy = fitresulty.b2;
 peak_intensityy = fitresulty.a2;
-peak_widthy = abs(fitresulty.c2);
+peak_widthy = 2.35482*abs(fitresulty.c2);
 off_sety = fitresulty.d2;
 
 Ix = [];
 for u = 1:size(data,2)
     Ix = [Ix mean(data(:,u))];
 end
-%figure()
-%hold on
-%plot(1:size(data,2),Ix)
+figure()
+hold on
+plot(1:size(data,2),Ix)
 
 [peak_intensityx, argmaxx] = max(Ix);
 peak_posx = argmaxx;
 [xDatax, yDatax] = prepareCurveData( 1:size(data,2), Ix );
-ftx = fittype( 'a1*exp(-((x-b1)/c1)^2)+d1', 'independent', 'x', 'dependent', 'y' );
+ftx = fittype( 'a1*exp(-0.5*((x-b1)/c1)^2)+d1', 'independent', 'x', 'dependent', 'y' );
 optsx = fitoptions( 'Method', 'NonlinearLeastSquares' );
 optsx.Display = 'Off';
 peak_widthx = 350;
 optsx.StartPoint = [peak_intensityx peak_posx peak_widthx 100];
 [fitresultx, gof] = fit( xDatax, yDatax, ftx, optsx );
 
-%plot(fitresultx)
+plot(fitresultx)
 peak_posx = fitresultx.b1;
 peak_intensityx = fitresultx.a1;
-peak_widthx = abs(fitresultx.c1);
+peak_widthx = 2.35482*abs(fitresultx.c1);
 off_setx = fitresultx.d1;
-datac = data((peak_posy-(peak_widthy)):(peak_posy+(peak_widthy)),(peak_posx-(peak_widthx)):(peak_posx+(peak_widthx)));
+datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
 figure()
 imagesc(datac);
 %% acquisition of speckles at different wavelength and timestamps + correction
@@ -128,7 +186,7 @@ for idx = 1:size(wavestart:wavestep:wavestop,2)
 end
 
 figure('name', 'spectral decorrelation', 'position', [400, 200, 600, 600]);    
-plot(wavelengths, spectral_decorrelations);
+plot(wavelengths, spectral_decorrelations, 'r.');
 
 %measure Corr(t)
 
@@ -171,76 +229,20 @@ for idx = 1:size(time_stamps1,2)
 end
 
 figure('name', 'decorrelation in time');
-plot(time_stamps1(1:end), time_decorrelations);
+time_stamps2 = time_stamps1-mean(time_stamps1-time_stamps); %assuming decorrelation depends on tau = t2 - t1
+plot(time_stamps2(1:end), time_decorrelations, 'b.');
 
 %deduce Corr(wav)
 
 spectral_decorrelation_real = spectral_decorrelations./time_decorrelations;
 figure('name', 'spectral decorrelation_real', 'position', [400, 200, 600, 600]);
-plot(wavelengths, spectral_decorrelation_real, 'ko');
+plot(wavelengths, spectral_decorrelation_real, 'k.');
 
 relative_contrast = (contrasts - mean(contrasts).*ones(1,length(contrasts)))./(mean(contrasts));
 figure('name', 'relative contrast', 'position', [600, 200, 600, 600]);
 plot(wavelengths, relative_contrast);
 
-%% variation of contrast with z movement and image of the camera
-PCOsrc.E2ExposureTime = 100;
-T=0;
-fig = figure()
 
-while ishandle(fig)
-    imagesc(getsnapshot(PCOvid)); daspect([1 1 1])
-    colorbar
-    pause(0.01)
-      datatry = getsnapshot(PCOvid);
-      Iy =[];
-      pause(0.05)
-      for i = 1:size(datatry,1)
-        Iy = [Iy mean(datatry(i,:))];
-      end
-      
-      [peak_intensityy, argmaxy] = max(Iy);
-        peak_posy = argmaxy;
-        [xDatay, yDatay] = prepareCurveData( 1:size(datatry,1), Iy );
-        fty = fittype( 'a2*exp(-((x-b2)/c2)^2)+d2', 'independent', 'x', 'dependent', 'y' );
-        optsy = fitoptions( 'Method', 'NonlinearLeastSquares' );
-        optsy.Display = 'Off';
-        peak_widthy = 500;
-        optsy.StartPoint = [peak_intensityy peak_posy peak_widthy 100];
-        [fitresulty, gof] = fit( xDatay, yDatay, fty, optsy );
-
-        
-        peak_posy = fitresulty.b2;
-        peak_intensityy = fitresulty.a2;
-        peak_widthy = abs(fitresulty.c2);
-        off_sety = fitresulty.d2;
-
-        Ix = [];
-        for u = 1:size(datatry,2)
-            Ix = [Ix mean(datatry(:,u))];
-        end
-
-        [peak_intensityx, argmaxx] = max(Ix);
-        peak_posx = argmaxx;
-        [xDatax, yDatax] = prepareCurveData( 1:size(datatry,2), Ix );
-        ftx = fittype( 'a1*exp(-((x-b1)/c1)^2)+d1', 'independent', 'x', 'dependent', 'y' );
-        optsx = fitoptions( 'Method', 'NonlinearLeastSquares' );
-        optsx.Display = 'Off';
-        peak_widthx = 350;
-        optsx.StartPoint = [peak_intensityx peak_posx peak_widthx 100];
-        [fitresultx, gof] = fit( xDatax, yDatax, ftx, optsx );
-
-        
-        peak_posx = fitresultx.b1;
-        peak_intensityx = fitresultx.a1;
-        peak_widthx = abs(fitresultx.c1);
-        off_setx = fitresultx.d1;
-        %datacropped = datatry((peak_posy-(peak_widthy/2)):(peak_posy+(peak_widthy/2)),(peak_posx-(peak_widthx/2)):(peak_posx+(peak_widthx/2)));
-        pause(0.05)
-        imagesc(datatry); daspect([1 1 1])
-        colorbar
-        contrasts =  std2(datacropped)/mean(mean(datacropped))
- end
 %% close all and clean
 delete(mono);
 imaqreset;

@@ -34,6 +34,7 @@ classdef monochromator < handle
         output_intensity = [];
         spectrometer;
         servo;
+        peak_intensity;
     end
     
     methods
@@ -94,7 +95,7 @@ classdef monochromator < handle
 
             [xData, yData] = prepareCurveData( wavelengths, spectrum );
             % Set up fittype and options.
-            ft = fittype( 'a*exp(-((x-b)/c)^2)+d', 'independent', 'x', 'dependent', 'y' );
+            ft = fittype( 'a*exp(-0.5*((x-b)/c)^2)+d', 'independent', 'x', 'dependent', 'y' );
             opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
             opts.Display = 'Off';
             peak_width = 2;
@@ -104,7 +105,8 @@ classdef monochromator < handle
 
             peak_pos = fitresult.b;
             peak_intensity = fitresult.a;
-            peak_width = fitresult.c;
+            obj.peak_intensity = peak_intensity;
+            peak_width = 2.35482*fitresult.c;
             off_set = fitresult.d;
             rsquare = gof.rsquare;
             if verbosity                

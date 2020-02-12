@@ -23,7 +23,7 @@ classdef monochromator < handle
     
     properties (Access = public)
         %%%%%%%%%% those two parameters depends on the optical configuration
-        min_servo_position = 5.70;
+        min_servo_position = 5.20;
         max_servo_position = 12.40;
         %%%%%%%%%% this depend on the driver used (assumed to be a thorlabs
         %%%%%%%%%% dc servo motor

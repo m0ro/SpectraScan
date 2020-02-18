@@ -4,12 +4,12 @@ clc;
 format long;
 
 k = 1;
-n = 300;
+n = 360;
 Win = 0.004;
 Lb = 150 ;
 La = 50;
 
-   lambda = [500 550 600 650 700 750];
+   lambda = 532
 %     dlambda = 1;
 %     lambda = (500:dlambda:1000)';
     dD = pi/500;

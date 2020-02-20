@@ -4,7 +4,7 @@ root_folder = strcat('D:\Users\Comedia\melo\',datestr(now,'ddmmyyyy'),'\');
 disp(msg);
 % add the path of the project
 addpath('D:\Users\Comedia\moro\git_code\SpectraScan\');
-
+sample_name = 'Chicken 0.36';
 %% initialize the monochromator and the camera
 % monochromator
 mono = monochromator();
@@ -29,7 +29,7 @@ mono.show_spectra_live();
 mono.start_calibration(480,700,0.1)    
 %% Intensity distribution seen by the spectrometer (should follow the profile of the supercontinuum)
 Intensity_distribution_out_ot_the_spectrometer = figure();
-plot(mono.output_intensity(:,1),mono.output_intensity(:,2),'o');
+plot(mono.output_intensity(:,1),mono.output_intensity(:,2),'o-');
 %% show the speckle with continuos update to allow user to select the proper region
 
 PCOsrc.E2ExposureTime = 400;
@@ -126,88 +126,89 @@ imagesc(data);
 pause(0.2)
 
 %%% new code
-subsampling = 20;
-[rows, columns] = size(data);
-numOutputRows = round(rows/subsampling);
-numOutputColumns = round(columns/subsampling);
-subdata = imresize(data, [numOutputRows, numOutputColumns]);
-
-%Inital guess parameters: amplitude, x0, y0, sigma, offset
-x0 = double([max(subdata(:))-min(subdata(:)),...
-    sum(mean(subdata,1)*1:xs)/xs, ...
-    sum(mean(subdata,1)*1:ys)/ys, ...
-    xs/2, min(subdata(:))]); 
-
-[ys, xs] = size(subdata);
-[X,Y] = meshgrid(1:xs, 1:ys);
-xdata = zeros(size(X,1),size(Y,2),2);
-xdata(:,:,1) = X; xdata(:,:,2) = Y;
-[p,resnorm,residual,exitflag] = lsqcurvefit(@D2GaussFunction, x0, xdata, double(subdata));
+% subsampling = 20;
+% [rows, columns] = size(data);
+% numOutputRows = round(rows/subsampling);
+% numOutputColumns = round(columns/subsampling);
+% subdata = imresize(data, [numOutputRows, numOutputColumns]);
+% 
+% %Inital guess parameters: amplitude, x0, y0, sigma, offset
+% [ys, xs] = size(subdata);
+% x0 = double([max(subdata(:))-min(subdata(:)),...
+%     sum(mean(subdata,1)*1:xs)/xs, ...
+%     sum(mean(subdata,1)*1:ys)/ys, ...
+%     xs/2, min(subdata(:))]); 
+% 
+% 
+% [X,Y] = meshgrid(1:xs, 1:ys);
+% xdata = zeros(size(X,1),size(Y,2),2);
+% xdata(:,:,1) = X; xdata(:,:,2) = Y;
+% [p,resnorm,residual,exitflag] = lsqcurvefit(@D2GaussFunction, x0, xdata, double(subdata));
 
 %%% end new code
 
-% %first axis
-% 
-% Iy =[];
-% for i = 1:size(data,1)
-%     Iy = [Iy mean(data(i,:))];
-% end
-% figure()
-% hold on
-% plot(1:size(data,1),Iy)
-% 
-% [peak_intensityy, argmaxy] = max(Iy);
-% peak_posy = argmaxy;
-% [xDatay, yDatay] = prepareCurveData( 1:size(data,1), Iy );
-% fty = fittype( 'a2*exp(-0.5*((x-b2)/c2)^2)+d2', 'independent', 'x', 'dependent', 'y' );
-% optsy = fitoptions( 'Method', 'NonlinearLeastSquares' );
-% optsy.Display = 'Off';
-% peak_widthy = 500;
-% optsy.StartPoint = [peak_intensityy peak_posy peak_widthy 100];
-% [fitresulty, gof] = fit( xDatay, yDatay, fty, optsy );
-% 
-% plot(fitresulty)
-% peak_posy = fitresulty.b2;
-% peak_intensityy = fitresulty.a2;
-% peak_widthy = 2.35482*abs(fitresulty.c2);
-% off_sety = fitresulty.d2;
-% 
-% %second axis
-% 
-% Ix = [];
-% for u = 1:size(data,2)
-%     Ix = [Ix mean(data(:,u))];
-% end
-% figure()
-% hold on
-% plot(1:size(data,2),Ix)
-% 
-% [peak_intensityx, argmaxx] = max(Ix);
-% peak_posx = argmaxx;
-% [xDatax, yDatax] = prepareCurveData( 1:size(data,2), Ix );
-% ftx = fittype( 'a1*exp(-0.5*((x-b1)/c1)^2)+d1', 'independent', 'x', 'dependent', 'y' );
-% optsx = fitoptions( 'Method', 'NonlinearLeastSquares' );
-% optsx.Display = 'Off';
-% peak_widthx = 350;
-% optsx.StartPoint = [peak_intensityx peak_posx peak_widthx 100];
-% [fitresultx, gof] = fit( xDatax, yDatax, ftx, optsx );
-% 
-% plot(fitresultx)
-% peak_posx = fitresultx.b1;
-% peak_intensityx = fitresultx.a1;
-% peak_widthx = 2.35482*abs(fitresultx.c1);
-% off_setx = fitresultx.d1;
-% %end of the fit
+%first axis
 
-%
+Iy =[];
+for i = 1:size(data,1)
+    Iy = [Iy mean(data(i,:))];
+end
+figure()
+hold on
+plot(1:size(data,1),Iy)
+
+[peak_intensityy, argmaxy] = max(Iy);
+peak_posy = argmaxy;
+[xDatay, yDatay] = prepareCurveData( 1:size(data,1), Iy );
+fty = fittype( 'a2*exp(-0.5*((x-b2)/c2)^2)+d2', 'independent', 'x', 'dependent', 'y' );
+optsy = fitoptions( 'Method', 'NonlinearLeastSquares' );
+optsy.Display = 'Off';
+peak_widthy = 500;
+optsy.StartPoint = [peak_intensityy peak_posy peak_widthy 100];
+[fitresulty, gof] = fit( xDatay, yDatay, fty, optsy );
+
+plot(fitresulty)
+peak_posy = fitresulty.b2;
+peak_intensityy = fitresulty.a2;
+peak_widthy = 2.35482*abs(fitresulty.c2);
+off_sety = fitresulty.d2;
+
+%second axis
+
+Ix = [];
+for u = 1:size(data,2)
+    Ix = [Ix mean(data(:,u))];
+end
+figure()
+hold on
+plot(1:size(data,2),Ix)
+
+[peak_intensityx, argmaxx] = max(Ix);
+peak_posx = argmaxx;
+[xDatax, yDatax] = prepareCurveData( 1:size(data,2), Ix );
+ftx = fittype( 'a1*exp(-0.5*((x-b1)/c1)^2)+d1', 'independent', 'x', 'dependent', 'y' );
+optsx = fitoptions( 'Method', 'NonlinearLeastSquares' );
+optsx.Display = 'Off';
+peak_widthx = 350;
+optsx.StartPoint = [peak_intensityx peak_posx peak_widthx 100];
+[fitresultx, gof] = fit( xDatax, yDatax, ftx, optsx );
+
+plot(fitresultx)
+peak_posx = fitresultx.b1;
+peak_intensityx = fitresultx.a1;
+peak_widthx = 2.35482*abs(fitresultx.c1);
+off_setx = fitresultx.d1;
+%end of the fit
+
+
 % datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2))-(off_setx+off_sety)/2;
 % remove the offset gives not correct contrast!
-peak_posx = p(2)*subsampling;
-peak_posy = p(3)*subsampling;
-peak_width = p(4)*subsampling;
+% peak_posx = int16(p(2)*subsampling);
+% peak_posy = int16(p(3)*subsampling);
+% peak_width =int16(abs(p(4)*subsampling));
 
-datac = data((peak_posx-(peak_width)/2):(peak_posx+(peak_width)/2),...
-             (peak_posy-(peak_width)/2):(peak_posy+(peak_width)/2));
+datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
+             (peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
 figure()
 imagesc(datac);
 %% acquisition of speckles at different wavelength and timestamps + correction
@@ -217,7 +218,7 @@ imagesc(datac);
 PCOsrc.E2ExposureTime = 100;
 wavestart = 460;
 wavestop = 700;
-wavestep = 20;
+wavestep = 5;
 
 
 wavelength_speckle_evolution_fig = figure('name', 'PCO.edge', 'position', [200, 200, 600, 600]);
@@ -236,9 +237,9 @@ while ishandle(wavelength_speckle_evolution_fig)
         fprintf('set to wavelength %.1f\n', wav);
         pause(0.5)
         data = getsnapshot(PCOvid);
-%         datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2))-(off_setx+off_sety)/2;
-        datac = data((peak_posx-(peak_width)/2):(peak_posx+(peak_width)/2),...
-             (peak_posy-(peak_width)/2):(peak_posy+(peak_width)/2));
+
+        datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
+             (peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
         transmitted_light = [transmitted_light mean2(datac)];
     end
     plot(transmitted_light)
@@ -275,9 +276,9 @@ while ishandle(wavelength_speckle_evolution_fig)
         exposure_times_vector = [exposure_times_vector tmp_exp];
         fprintf('exposure time %.1f\n', PCOsrc.E2ExposureTime);
         data = getsnapshot(PCOvid);
-%         datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2))-(off_setx+off_sety)/2;
-        datac = data((peak_posx-(peak_width)/2):(peak_posx+(peak_width)/2),...
-             (peak_posy-(peak_width)/2):(peak_posy+(peak_width)/2));
+
+        datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
+             (peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
         time_stamps_D = [time_stamps_D toc];
         
         spp = speckle_processing(size(datac)); % applying a filter on the 
@@ -301,9 +302,6 @@ while ishandle(wavelength_speckle_evolution_fig)
     close(wavelength_speckle_evolution_fig)
 end
 
-% search for an available filename and save 
-save(get_next_filename(root_folder, 'W-Butter') ,...
-    'video_data_D','time_stamps_D','wavelengths','exposure_times_vector','-v7.3');
 
 decorrelation = [];
 contrasts = [];
@@ -312,12 +310,16 @@ for idx = 1:size(wavestart:wavestep:wavestop,2)
     decorrelation = [decorrelation corr2(video_data_D(:,:,1), video_data_D(:,:,idx))];
     contrasts = [contrasts std2(video_data_D(:,:,idx)./mean2(video_data_D(:,:,idx)))];
 end
+relative_contrast = (contrasts - mean(contrasts).*ones(1,length(contrasts)))./(mean(contrasts));
+
+% search for an available filename and save 
+save(get_next_filename(root_folder, strcat('W-',sample_name)) ,...
+    'video_data_D','time_stamps_D','wavelengths','exposure_times_vector','decorrelation',...
+    'relative_contrast','-v7.3');
 
 figure('name', 'decorrelation', 'position', [400, 200, 600, 600]);    
 plot(wavelengths, decorrelation, 'r.-');
 
-
-relative_contrast = (contrasts - mean(contrasts).*ones(1,length(contrasts)))./(mean(contrasts));
 figure('name', 'relative contrast', 'position', [600, 200, 600, 600]);
 plot(wavelengths, relative_contrast, 'g.-');
 %% measure Corr(t)
@@ -343,10 +345,9 @@ while ishandle(time_speckle_evolution_fig)
             t2 = toc
             if t2 > time_stamps_D(1,k)
                 dataTD = getsnapshot(PCOvid);
-                % take care of the offset when measuring the contrast!
-%                 datacTD = dataTD((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2))-(off_setx+off_sety)/2;
-                dataTD = dataTD((peak_posx-(peak_width)/2):(peak_posx+(peak_width)/2),...
-                    (peak_posy-(peak_width)/2):(peak_posy+(peak_width)/2));
+                
+                datacTD = dataTD((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
+                    (peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
                 time_stamps_TD = [time_stamps_TD toc];
                 video_data_TD = cat(3, video_data_TD, datacTD);
                 imagesc(datacTD); daspect([1 1 1])
@@ -363,8 +364,6 @@ while ishandle(time_speckle_evolution_fig)
         close(time_speckle_evolution_fig)
 end
 
-% search for an available filename and save 
-save(get_next_filename(root_folder, 'T-Butter') ,'video_data_TD','time_stamps_TD','wav','-v7.3');
 
 time_decorrelations = [];
 
@@ -372,12 +371,15 @@ for idx = 1:size(time_stamps_TD,2)
     time_decorrelations = [time_decorrelations corr2(video_data_TD(:,:,1), video_data_TD(:,:,idx))];
 end
 
+% search for an available filename and save 
+save(get_next_filename(root_folder,strcat('T-', sample_name)) ,'video_data_TD','time_stamps_TD','time_decorrelations','wav','-v7.3');
+
 %I shift the time instant to match or at least be close to the initial one
 %of the Corr(wav,t) measurement
 
 figure('name', 'decorrelation in time');
 time_stamps_TDshifted = time_stamps_TD-mean(time_stamps_TD-time_stamps_D); %assuming decorrelation depends on tau = t2 - t1
-plot(time_stamps_TDshifted(1:end), time_decorrelations, 'b.');
+plot(time_stamps_TDshifted(1:end), time_decorrelations, 'b.-');
 
 %% deduce Corr(wav)
 
@@ -395,38 +397,50 @@ plot(wavelengths,transmitted_light_after_correction,'.-')
 %instants. This part cannot be used to estract the spectral decorrelation
 %if I doesn't select the right time instant.
 
-wav = mono.set_wavelength(700)
-PCOsrc.E2ExposureTime = min_exposure;
-pause(3)
 
-free_time_stamps = [];
-free_video_data = [];
 
-temporal_decorrelation_free = figure('name', 'PCO.edge', 'position', [200, 200, 600, 600]);
 
-tic
-while ishandle(temporal_decorrelation_free)
-    pause(0.3)
-
-    free_data = getsnapshot(PCOvid);
-    free_datac = free_data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2))-(off_setx+off_sety)/2;
-    free_time_stamps = [free_time_stamps toc];
-    free_video_data = cat(3, free_video_data, free_datac);
-    imagesc(free_datac);
-    drawnow
-    pause(min_exposure/1000);
- end
     
-free_time_decorrelations = [];
+    wav = mono.set_wavelength(700)
+    PCOsrc.E2ExposureTime = min_exposure;
+    pause(3)
 
-for idx = 1:size(free_time_stamps,2)
-    free_time_decorrelations = [free_time_decorrelations corr2(free_video_data(:,:,1), free_video_data(:,:,idx))];
-end
-figure()
-plot(free_time_stamps(1:end), free_time_decorrelations, 'b.');
+    free_time_stamps = [];
+    free_video_data = [];
+
+    temporal_decorrelation_free = figure('name', 'PCO.edge', 'position', [200, 200, 600, 600]);
+
+    tic
+    while ishandle(temporal_decorrelation_free)
+        pause(0.3)
+
+        free_data = getsnapshot(PCOvid);
+        free_datac = free_data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),(peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
+        free_time_stamps = [free_time_stamps toc];
+        free_video_data = cat(3, free_video_data, free_datac);
+        imagesc(free_datac);
+        drawnow
+        pause(min_exposure/1000);
+        if toc > 120
+            break
+        end
+     end
+
+    free_time_decorrelations = [];
+
+    for idx = 1:size(free_time_stamps,2)
+        free_time_decorrelations = [free_time_decorrelations corr2(free_video_data(:,:,1), free_video_data(:,:,idx))];
+    end
+    figure()
+    plot(free_time_stamps(1:end), free_time_decorrelations, 'b.-');
+    hold on
+    
+    free_time_decorrelations_set = [];
+    free_time_decorrelations_set = [free_time_decorrelations_set; free_time_decorrelations]
 
 % search for an available filename and save 
-save(get_next_filename(root_folder, 'T_free-Butter') ,'free_video_data','free_time_stamps','wav','-v7.3');
+save(get_next_filename(root_folder,strcat('T_free-',sample_name)) ,'free_video_data',...
+    'free_time_stamps','free_time_decorrelations','wav','-v7.3');
 
 %% close all and clean
 delete(mono);

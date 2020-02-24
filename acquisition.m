@@ -216,9 +216,9 @@ imagesc(datac);
 %measure the Corr(wav,t) and contrast
 
 PCOsrc.E2ExposureTime = 100;
-wavestart = 460;
+wavestart = 490;
 wavestop = 700;
-wavestep = 5;
+wavestep = 2;
 
 
 wavelength_speckle_evolution_fig = figure('name', 'PCO.edge', 'position', [200, 200, 600, 600]);
@@ -314,14 +314,16 @@ relative_contrast = (contrasts - mean(contrasts).*ones(1,length(contrasts)))./(m
 
 % search for an available filename and save 
 save(get_next_filename(root_folder, strcat('W-',sample_name)) ,...
-    'video_data_D','time_stamps_D','wavelengths','exposure_times_vector','decorrelation',...
+    'video_data_D','time_stamps_D','wavelengths',...
+    'wavestart','wavestep','wavestop','exposure_times_vector','decorrelation',...
     'relative_contrast','-v7.3');
 
-figure('name', 'decorrelation', 'position', [400, 200, 600, 600]);    
+figure('name', 'decorrelation');    
 plot(wavelengths, decorrelation, 'r.-');
 
-figure('name', 'relative contrast', 'position', [600, 200, 600, 600]);
-plot(wavelengths, relative_contrast, 'g.-');
+figure('name', 'relative contrast');
+plot(wavelengths, relative_contrast, 'm.-');
+
 %% measure Corr(t)
 
 %we set a good wavelength in order to avoid shot noise (so the last one is
@@ -379,12 +381,12 @@ save(get_next_filename(root_folder,strcat('T-', sample_name)) ,'video_data_TD','
 
 figure('name', 'decorrelation in time');
 time_stamps_TDshifted = time_stamps_TD-mean(time_stamps_TD-time_stamps_D); %assuming decorrelation depends on tau = t2 - t1
-plot(time_stamps_TDshifted(1:end), time_decorrelations, 'b.-');
+plot(time_stamps_TD, time_decorrelations, 'b.-');
 
 %% deduce Corr(wav)
 
 spectral_decorrelation = decorrelation./time_decorrelations;
-figure('name', 'spectral decorrelation', 'position', [400, 200, 600, 600]);
+figure('name', 'spectral decorrelation');
 plot(wavelengths, spectral_decorrelation, 'k.-');
 
 figure()

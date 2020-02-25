@@ -4,7 +4,7 @@ root_folder = strcat('D:\Users\Comedia\melo\',datestr(now,'ddmmyyyy'),'\');
 disp(msg);
 % add the path of the project
 addpath('D:\Users\Comedia\moro\git_code\SpectraScan\');
-sample_name = 'Chicken 0.36';
+sample_name = 'ChickenAfterPSFandIntensityimprovementChangingExposure';
 %% initialize the monochromator and the camera
 % monochromator
 mono = monochromator();
@@ -24,6 +24,8 @@ pause(10);
 PCOsrc.E2ExposureTime = 400;
 preview(PCOvid);
 %% Show spectrum to help calibration procedure
+% mono.spectrometer.setintegrationTime(100000)
+mono.integrationTime = 10000;
 mono.show_spectra_live();
 %% perform the calibration
 mono.start_calibration(480,700,0.1)    
@@ -32,9 +34,9 @@ Intensity_distribution_out_ot_the_spectrometer = figure();
 plot(mono.output_intensity(:,1),mono.output_intensity(:,2),'o-');
 %% show the speckle with continuos update to allow user to select the proper region
 
-PCOsrc.E2ExposureTime = 400;
+PCOsrc.E2ExposureTime = 100;
 sample_explorer_fig = figure();
-wav = mono.set_wavelength(700) %set a good wavelength that allows a good compromise between SNR
+wav = mono.set_wavelength(700); %set a good wavelength that allows a good compromise between SNR
                                %on the camera, output intensity on the
                                %supercontinuum and properties of the medium
                                %that can affect the pattern
@@ -215,10 +217,10 @@ imagesc(datac);
 
 %measure the Corr(wav,t) and contrast
 
-PCOsrc.E2ExposureTime = 100;
+PCOsrc.E2ExposureTime = 200;
 wavestart = 460;
 wavestop = 700;
-wavestep = 5;
+wavestep = 2;
 
 
 wavelength_speckle_evolution_fig = figure('name', 'PCO.edge', 'position', [200, 200, 600, 600]);
@@ -230,19 +232,19 @@ while ishandle(wavelength_speckle_evolution_fig)
     %spectrum of the supercontinuum and by the properties of the scattering
     %medium.
     
-    transmitted_light = [];
-
-    for wavelength = wavestart:wavestep:wavestop
-        wav = mono.set_wavelength(wavelength);
-        fprintf('set to wavelength %.1f\n', wav);
-        pause(0.5)
-        data = getsnapshot(PCOvid);
-
-        datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
-             (peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
-        transmitted_light = [transmitted_light mean2(datac)];
-    end
-    plot(transmitted_light)
+%     transmitted_light = [];
+% 
+%     for wavelength = wavestart:wavestep:wavestop
+%         wav = mono.set_wavelength(wavelength);
+%         fprintf('set to wavelength %.1f\n', wav);
+%         pause(0.5)
+%         data = getsnapshot(PCOvid);
+% 
+%         datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
+%              (peak_posx-(peak_widthx)/2):(peak_posx+(peak_widthx)/2));
+%         transmitted_light = [transmitted_light mean2(datac)];
+%     end
+%     plot(transmitted_light)
     
     %if there's an intensity unbalance, the following cycle tries to
     %compensate changing the exposure time for each frame, setting the
@@ -266,15 +268,15 @@ while ishandle(wavelength_speckle_evolution_fig)
     for wavelength = wavestart:wavestep:wavestop
         wav = mono.set_wavelength(wavelength);
         fprintf('set to wavelength %.1f\n', wav);
-        tmp_exp = min_exposure*max(transmitted_light)/(transmitted_light(k));
-        if (tmp_exp > max_exposure)
-            disp("max exposure reached, set to 2000ms");
-            tmp_exp = max_exposure;
-        end
-        
-        PCOsrc.E2ExposureTime = tmp_exp;
-        exposure_times_vector = [exposure_times_vector tmp_exp];
-        fprintf('exposure time %.1f\n', PCOsrc.E2ExposureTime);
+%         tmp_exp = min_exposure*max(transmitted_light)/(transmitted_light(k));
+%         if (tmp_exp > max_exposure)
+%             disp("max exposure reached, set to 2000ms");
+%             tmp_exp = max_exposure;
+%         end
+%         
+%         PCOsrc.E2ExposureTime = tmp_exp;
+%         exposure_times_vector = [exposure_times_vector tmp_exp];
+%         fprintf('exposure time %.1f\n', PCOsrc.E2ExposureTime);
         data = getsnapshot(PCOvid);
 
         datac = data((peak_posy-(peak_widthy)/2):(peak_posy+(peak_widthy)/2),...
@@ -292,7 +294,7 @@ while ishandle(wavelength_speckle_evolution_fig)
         wavelengths = [wavelengths wav];
         transmitted_light_after_correction = [transmitted_light_after_correction mean2(datac)];
         
-        imagesc(data_filtered); daspect([1 1 1])
+        imagesc(datac); daspect([1 1 1])
         colorbar
         drawnow
         

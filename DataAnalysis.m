@@ -24,9 +24,10 @@ D = [];
 W = [];
 C = [];
 RC = [];
-for ii = 5:7
-    load(['data_28022020_W-FirstSlice150_00' num2str(ii) '.mat']);
-    video_data_D = mycrop(video_data_D);
+for ii = 4
+    load(['data_14032020_W-FirstSlice150_00' num2str(ii) '.mat']);
+    %video_data_D = mycrop(video_data_D);
+
     figure()
     imagesc(video_data_D(:,:,end));
     
@@ -188,7 +189,7 @@ ylabel('spectral decorrelation');
 XX = [];
 YY = [];
 TEMPO = [];
-bandwidth = 58;
+tdec_bandwidth = 58;
 
 for ii = 7:9
 load(['data_28022020_W-FirstSlice150_00' num2str(ii) '.mat']);
@@ -295,11 +296,11 @@ axis([0 200 0 1])
 figure()
 delta_lambda_total = [];
 r2_total = [];
-bandwidth = 58;
+bandwidth = 500; %cioè li prendo tutti
 
-for ii = 7:9
-    load(['data_28022020_W-FirstSlice150_00' num2str(ii) '.mat']);
-    video_data_D = mycrop(video_data_D);
+for ii = 4
+    load(['data_14032020_W-FirstSlice150_00' num2str(ii) '.mat']);
+    %video_data_D = mycrop(video_data_D);
     
     MCF = zeros(size(time_stamps_D,2),size(time_stamps_D,2));
     delta_lambda = [];
@@ -314,54 +315,55 @@ for ii = 7:9
             end
         end
         
-%         plot(wavelengths(n), MCF(n,:))
+        plot(wavelengths(:), MCF(n,:))
+        pause(0.5)
 %         title('Decorrelation curves for different starting points')
 %         xlabel('\lambda (nm)')
 %         ylabel('Decorrelation')
 %         legend(['Starting correlating at ' num2str(wavelengths(n)) ' nm'])
-%         hold on
+        hold on
         
-        [xData, yData] = prepareCurveData( wavelengths , MCF(n,:) ); 
-
-        %Set up fittype and options.
-      
-        ft = fittype( '(1-a)*exp(-(abs(x-b))/c)+a', 'independent', 'x', 'dependent', 'y' );
-        opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
-        opts.Display = 'Off';
-        opts.Lower = [0 460 0];
-        opts.StartPoint = [0.05 wavelengths(n) 1];
-        opts.Upper = [1 705 10];
-        opts.Exclude = MCF(n,:) == 0;
-        
-        %Fit model to data.
-        [fitresult, gof] = fit( xData, yData, ft, opts );
-%         plot(fitresult)
-%         hold on
-        if gof.rsquare > 0.8
-            delta_lambda = [delta_lambda; fitresult.c];
-            r2 = [r2; gof.rsquare];
-            %plot(wavelengths(n), fitresult.c,'bo')
-            %plot(wavelengths(n), gof.rsquare,'ro')
-            %hold on
-        end
+%         [xData, yData] = prepareCurveData( wavelengths , MCF(n,:) ); 
+% 
+%         %Set up fittype and options.
+%       
+%         ft = fittype( '(1-a)*exp(-(abs(x-b))/c)+a', 'independent', 'x', 'dependent', 'y' );
+%         opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
+%         opts.Display = 'Off';
+%         opts.Lower = [0 460 0];
+%         opts.StartPoint = [0.05 wavelengths(n) 1];
+%         opts.Upper = [1 705 10];
+%         opts.Exclude = MCF(n,:) == 0;
+%         
+%         %Fit model to data.
+%         [fitresult, gof] = fit( xData, yData, ft, opts );
+% %         plot(fitresult)
+% %         hold on
+%         if gof.rsquare > 0.8
+%             delta_lambda = [delta_lambda; fitresult.c];
+%             r2 = [r2; gof.rsquare];
+%             %plot(wavelengths(n), fitresult.c,'bo')
+%             %plot(wavelengths(n), gof.rsquare,'ro')
+%             %hold on
+%         end
     end
-    delta_lambda_total = [delta_lambda_total delta_lambda];
-    r2_total = [r2_total r2];
-    
+%     delta_lambda_total = [delta_lambda_total delta_lambda];
+%     r2_total = [r2_total r2];
+%     
 end
-mean_delta_lambda_total = mean(mean(delta_lambda_total)) 
-mean_r2_total = mean(mean(r2_total)) 
-figure()
-plot(wavelengths,delta_lambda_total)
-legend('50ms first realization at 17.48h',...
-    '50ms second realization at 18.02h',...
-    '50ms third realization at 18.15h ')
-% legend('100ms at 17.13h',...
-%     '10ms at 17.30h')
-title('Decay constant as a function of \lambda')
-xlabel('\lambda (nm)')
-ylabel('\delta\lambda (nm)')
-%%
+% mean_delta_lambda_total = mean(mean(delta_lambda_total)) 
+% mean_r2_total = mean(mean(r2_total)) 
+% figure()
+% plot(wavelengths,delta_lambda_total)
+% legend('50ms first realization at 17.48h',...
+%     '50ms second realization at 18.02h',...
+%     '50ms third realization at 18.15h ')
+% % legend('100ms at 17.13h',...
+% %     '10ms at 17.30h')
+% title('Decay constant as a function of \lambda')
+% xlabel('\lambda (nm)')
+% ylabel('\delta\lambda (nm)')
+%% try to reverse the detuning to obtain points from right to left
 
 for k = length(time_stamps_D):-1:1
     for q = length(time_stamps_D)-k-1:-1:1 % loop on the different steps between different omegas 
@@ -369,4 +371,59 @@ for k = length(time_stamps_D):-1:1
         x = abs(time_stamps_D(k)-time_stamps_D(k-q));
     end
 end
-            
+
+%% image of the fiber
+figure(1)
+D = [];
+W = [];
+for ii = 4:6
+    load(['data_14032020_W-FirstSlice150_00' num2str(ii) '.mat']);
+    decorr = [];
+    for t = 1:size(time_stamps_D,2)
+        imagesc(video_data_D(:,:,t));
+%         decorr = [decorr corr2(video_data_D(:,:,1), video_data_D(:,:,t))];
+        pause(0.2)
+    end
+    D = [D; decorr];
+    W = [W; wavelengths];
+end
+figure()
+plot(mean(W), mean(D), 'LineWidth', 1)
+title('PSF decorrelation - average over 3 realization')
+
+%% making a video
+fig = figure();
+ vidfile = VideoWriter('testmovie.mp4','MPEG-4');
+  open(vidfile);
+ for t = 1:size(time_stamps_D,2)
+    imagesc(video_data_D(:,:,t));
+    title('PSF evolution as a function of wavelength')
+    newFrameOut = getframe(fig);
+    writeVideo(vidfile, newFrameOut);
+    pause(0.1)
+ end
+close(vidfile)
+
+%% tracking speckle size
+size1vec = [];
+size2vec = [];
+for ii = 5:7
+    load(['data_28022020_W-FirstSlice150_00' num2str(ii) '.mat']);
+    [autocorr, autocorrcrop, size1, size2] = speckleSize(video_data_D,6.5);
+    size1vec = [size1vec; size1];
+    size2vec = [size2vec; size2];
+end
+figure()
+plot(wavelengths,size2vec)
+ legend('100ms at 17.13h',...
+    '10ms at 17.30h', '50ms first realization at 17.48h')
+
+%%
+A = mycrop(video_data_D);
+for k = -5:5
+B = normxcorr2(A(:,:,55),A(:,:,55+k));
+[row, col] = find(ismember(B, max(B(:))));
+C = B(row-15:row+15,col-15:col+15);
+imagesc(B)
+pause(0.3)
+end
